@@ -2,72 +2,81 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>股票平均價格計算機</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             max-width: 800px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 15px;
             line-height: 1.6;
         }
         h1 {
             color: #333;
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
         }
         .container {
             background-color: #f9f9f9;
-            padding: 20px;
+            padding: 15px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .input-row {
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
             margin-bottom: 10px;
             padding: 10px;
             background-color: white;
             border-radius: 4px;
             border: 1px solid #ddd;
+            gap: 8px;
         }
         .input-group {
-            margin-right: 15px;
+            flex: 1;
+            min-width: 120px;
         }
         label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
             font-weight: bold;
             color: #555;
+            font-size: 0.9rem;
         }
         input {
-            padding: 8px;
+            padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            width: 100px;
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 1rem;
         }
         button {
-            padding: 8px 15px;
+            padding: 10px 15px;
             background-color: #4CAF50;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             margin: 5px;
-        }
-        button:hover {
-            background-color: #45a049;
+            font-size: 1rem;
+            white-space: nowrap;
         }
         #add-row {
             background-color: #2196F3;
-        }
-        #add-row:hover {
-            background-color: #0b7dda;
+            width: 100%;
+            margin: 10px 0;
         }
         .subtotal {
-            margin-left: 20px;
+            margin-left: auto;
             font-weight: bold;
             color: #E91E63;
+            font-size: 0.9rem;
+            min-width: 100px;
+            text-align: right;
         }
         #result {
             margin-top: 20px;
@@ -77,16 +86,36 @@
             border-left: 4px solid #4CAF50;
         }
         .avg-price {
-            font-size: 1.2em;
+            font-size: 1.3rem;
             color: #2E7D32;
             font-weight: bold;
         }
         .remove-row {
             background-color: #f44336;
-            margin-left: 10px;
+            padding: 8px 12px;
+            margin-left: 5px;
         }
-        .remove-row:hover {
-            background-color: #d32f2f;
+        
+        /* 手機版專用樣式 */
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 10px;
+            }
+            .input-row {
+                padding: 8px;
+            }
+            input {
+                padding: 8px;
+            }
+            button {
+                padding: 8px 12px;
+            }
+            #add-row {
+                margin: 8px 0;
+            }
         }
     </style>
 </head>
@@ -101,9 +130,9 @@
         <button id="add-row">+ 新增一筆</button>
         
         <div id="result">
-            <p>平均成本價: <span class="avg-price" id="avg-price">0.00</span> 元/股</p>
+            <p>平均成本價: <span class="avg-price" id="avg-price">0</span> 元/股</p>
             <p>總股數: <span id="total-shares">0</span> 股</p>
-            <p>總投資金額: <span id="total-cost">0.00</span> 元</p>
+            <p>總投資金額: <span id="total-cost">0</span> 元</p>
         </div>
     </div>
 
@@ -138,7 +167,7 @@
                     <label>數量</label>
                     <input type="number" class="qty" placeholder="股數" min="0">
                 </div>
-                <div class="subtotal">小計: <span class="subtotal-value">0.00</span> 元</div>
+                <div class="subtotal">小計: <span class="subtotal-value">0</span> 元</div>
                 <button class="remove-row">×</button>
             `;
             
@@ -182,22 +211,22 @@
             rows.forEach(row => {
                 const price = parseFloat(row.querySelector('.price').value) || 0;
                 const qty = parseFloat(row.querySelector('.qty').value) || 0;
-                const subtotal = price * qty;
+                const subtotal = Math.round(price * qty); // 四捨五入到整數
                 
                 // 更新小計
-                row.querySelector('.subtotal-value').textContent = subtotal.toFixed(2);
+                row.querySelector('.subtotal-value').textContent = subtotal;
                 
                 totalCost += subtotal;
                 totalShares += qty;
             });
             
-            // 計算平均價格
-            const avgPrice = totalShares > 0 ? (totalCost / totalShares) : 0;
+            // 計算平均價格（四捨五入到整數）
+            const avgPrice = totalShares > 0 ? Math.round(totalCost / totalShares) : 0;
             
             // 更新結果
-            document.getElementById('avg-price').textContent = avgPrice.toFixed(2);
+            document.getElementById('avg-price').textContent = avgPrice;
             document.getElementById('total-shares').textContent = totalShares;
-            document.getElementById('total-cost').textContent = totalCost.toFixed(2);
+            document.getElementById('total-cost').textContent = totalCost;
         }
     </script>
 </body>
