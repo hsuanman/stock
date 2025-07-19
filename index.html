@@ -1,21 +1,52 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-Hant">
 <head>
-    <title>簡易計算機</title>
-    <script>
-        function calculate() {
-            const num1 = parseFloat(document.getElementById("num1").value);
-            const num2 = parseFloat(document.getElementById("num2").value);
-            const result = num1 + num2;
-            document.getElementById("result").innerText = result;
-        }
-    </script>
+    <meta charset="UTF-8">
+    <title>股票平均價格計算機</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        h1 { color: #333; }
+        .input-group { margin-bottom: 10px; }
+        input, button { padding: 8px; margin: 5px 0; }
+        button { background: #4CAF50; color: white; border: none; cursor: pointer; }
+        #result { font-weight: bold; margin-top: 10px; }
+    </style>
 </head>
 <body>
-    <h1>加法計算機</h1>
-    <input type="number" id="num1" placeholder="數字1">
-    <input type="number" id="num2" placeholder="數字2">
-    <button onclick="calculate()">計算</button>
-    <p>結果: <span id="result"></span></p>
+    <h1>股票平均價格計算機</h1>
+    
+    <div id="inputs">
+        <div class="input-group">
+            <label>買入價格 1:</label>
+            <input type="number" id="price1" placeholder="輸入價格">
+            <label>數量:</label>
+            <input type="number" id="qty1" placeholder="輸入股數">
+        </div>
+        <div class="input-group">
+            <label>買入價格 2:</label>
+            <input type="number" id="price2" placeholder="輸入價格">
+            <label>數量:</label>
+            <input type="number" id="qty2" placeholder="輸入股數">
+        </div>
+        <button onclick="calculate()">計算平均成本</button>
+    </div>
+    
+    <div id="result"></div>
+
+    <script>
+        function calculate() {
+            const price1 = parseFloat(document.getElementById("price1").value) || 0;
+            const qty1 = parseFloat(document.getElementById("qty1").value) || 0;
+            const price2 = parseFloat(document.getElementById("price2").value) || 0;
+            const qty2 = parseFloat(document.getElementById("qty2").value) || 0;
+
+            const totalCost = (price1 * qty1) + (price2 * qty2);
+            const totalShares = qty1 + qty2;
+            const avgPrice = totalCost / totalShares;
+
+            document.getElementById("result").innerHTML = 
+                `平均成本價: <span style="color: blue;">${avgPrice.toFixed(2)}</span> 元/股`;
+        }
+    </script>
 </body>
 </html>
