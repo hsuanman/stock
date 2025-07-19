@@ -130,7 +130,7 @@
         <button id="add-row">+ 新增一筆</button>
         
         <div id="result">
-            <p>平均成本價: <span class="avg-price" id="avg-price">0</span> 元/股</p>
+            <p>平均成本價: <span class="avg-price" id="avg-price">0.00</span> 元/股</p>
             <p>總股數: <span id="total-shares">0</span> 股</p>
             <p>總投資金額: <span id="total-cost">0</span> 元</p>
         </div>
@@ -221,7 +221,7 @@
             });
             
             // 計算平均價格（四捨五入到整數）
-            const avgPrice = totalShares > 0 ? Math.round(totalCost / totalShares) : 0;
+            //const avgPrice = totalShares > 0 ? Math.round(totalCost / totalShares) : 0;
             
             // 更新結果
             document.getElementById('avg-price').textContent = avgPrice;
@@ -229,6 +229,6 @@
             document.getElementById('total-cost').textContent = totalCost;
         }
     </script>
-    <input type ="button" onclick="/payback.html" value="計算回本"></input>
+    <input type="button" onclick="window.open('/payback.html')" value="計算回本"></input>
 </body>
 </html>
