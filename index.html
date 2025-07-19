@@ -220,8 +220,8 @@
                 totalShares += qty;
             });
             
-            // 計算平均價格（四捨五入到整數）
-            const avgPrice = totalShares > 0 ? Math.round(totalCost / totalShares) : 0;
+            // 計算平均價格（保留小數點後兩位）
+            const avgPrice = totalShares > 0 ? (totalCost / totalShares).toFixed(2) : "0.00";
             
             // 更新結果
             document.getElementById('avg-price').textContent = avgPrice;
@@ -229,6 +229,8 @@
             document.getElementById('total-cost').textContent = totalCost;
         }
     </script>
-    <input type="button" onclick="window.open('/stock/payback.html')" value="計算回本"></input>
+    <input type="button" onclick="window.open('/stock/payback.html')" value="計算回本" style="width:40px" ></input>
 </body>
 </html>
+    
+
