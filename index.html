@@ -4,48 +4,200 @@
     <meta charset="UTF-8">
     <title>股票平均價格計算機</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
-        h1 { color: #333; }
-        .input-group { margin-bottom: 10px; }
-        input, button { padding: 8px; margin: 5px 0; }
-        button { background: #4CAF50; color: white; border: none; cursor: pointer; }
-        #result { font-weight: bold; margin-top: 10px; }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .container {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .input-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: white;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .input-group {
+            margin-right: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100px;
+        }
+        button {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #add-row {
+            background-color: #2196F3;
+        }
+        #add-row:hover {
+            background-color: #0b7dda;
+        }
+        .subtotal {
+            margin-left: 20px;
+            font-weight: bold;
+            color: #E91E63;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-radius: 4px;
+            border-left: 4px solid #4CAF50;
+        }
+        .avg-price {
+            font-size: 1.2em;
+            color: #2E7D32;
+            font-weight: bold;
+        }
+        .remove-row {
+            background-color: #f44336;
+            margin-left: 10px;
+        }
+        .remove-row:hover {
+            background-color: #d32f2f;
+        }
     </style>
 </head>
 <body>
-    <h1>股票平均價格計算機</h1>
-    
-    <div id="inputs">
-        <div class="input-group">
-            <label>買入價格 1:</label>
-            <input type="number" id="price1" placeholder="輸入價格">
-            <label>數量:</label>
-            <input type="number" id="qty1" placeholder="輸入股數">
+    <div class="container">
+        <h1>股票平均價格計算機</h1>
+        
+        <div id="inputs">
+            <!-- 輸入欄位會動態新增在這裡 -->
         </div>
-        <div class="input-group">
-            <label>買入價格 2:</label>
-            <input type="number" id="price2" placeholder="輸入價格">
-            <label>數量:</label>
-            <input type="number" id="qty2" placeholder="輸入股數">
+        
+        <button id="add-row">+ 新增一筆</button>
+        
+        <div id="result">
+            <p>平均成本價: <span class="avg-price" id="avg-price">0.00</span> 元/股</p>
+            <p>總股數: <span id="total-shares">0</span> 股</p>
+            <p>總投資金額: <span id="total-cost">0.00</span> 元</p>
         </div>
-        <button onclick="calculate()">計算平均成本</button>
     </div>
-    
-    <div id="result"></div>
 
     <script>
-        function calculate() {
-            const price1 = parseFloat(document.getElementById("price1").value) || 0;
-            const qty1 = parseFloat(document.getElementById("qty1").value) || 0;
-            const price2 = parseFloat(document.getElementById("price2").value) || 0;
-            const qty2 = parseFloat(document.getElementById("qty2").value) || 0;
+        // 初始化第一行
+        document.addEventListener('DOMContentLoaded', function() {
+            addRow();
+            
+            // 綁定新增按鈕事件
+            document.getElementById('add-row').addEventListener('click', function() {
+                if (document.querySelectorAll('.input-row').length < 5) {
+                    addRow();
+                } else {
+                    alert('最多只能輸入5筆交易記錄');
+                }
+            });
+        });
 
-            const totalCost = (price1 * qty1) + (price2 * qty2);
-            const totalShares = qty1 + qty2;
-            const avgPrice = totalCost / totalShares;
+        // 新增一行輸入欄位
+        function addRow() {
+            const inputsContainer = document.getElementById('inputs');
+            const rowCount = document.querySelectorAll('.input-row').length + 1;
+            
+            const row = document.createElement('div');
+            row.className = 'input-row';
+            row.innerHTML = `
+                <div class="input-group">
+                    <label>買入價格 ${rowCount}</label>
+                    <input type="number" class="price" placeholder="價格" step="0.01" min="0">
+                </div>
+                <div class="input-group">
+                    <label>數量</label>
+                    <input type="number" class="qty" placeholder="股數" min="0">
+                </div>
+                <div class="subtotal">小計: <span class="subtotal-value">0.00</span> 元</div>
+                <button class="remove-row">×</button>
+            `;
+            
+            inputsContainer.appendChild(row);
+            
+            // 綁定輸入事件
+            const priceInput = row.querySelector('.price');
+            const qtyInput = row.querySelector('.qty');
+            
+            priceInput.addEventListener('input', calculateAll);
+            qtyInput.addEventListener('input', calculateAll);
+            
+            // 綁定刪除按鈕
+            row.querySelector('.remove-row').addEventListener('click', function() {
+                row.remove();
+                updateRowNumbers();
+                calculateAll();
+            });
+            
+            // 自動聚焦到新欄位的價格輸入框
+            priceInput.focus();
+        }
 
-            document.getElementById("result").innerHTML = 
-                `平均成本價: <span style="color: blue;">${avgPrice.toFixed(2)}</span> 元/股`;
+        // 更新行號
+        function updateRowNumbers() {
+            const rows = document.querySelectorAll('.input-row');
+            rows.forEach((row, index) => {
+                const label = row.querySelector('label');
+                if (label) {
+                    label.textContent = `買入價格 ${index + 1}`;
+                }
+            });
+        }
+
+        // 計算所有數據
+        function calculateAll() {
+            const rows = document.querySelectorAll('.input-row');
+            let totalCost = 0;
+            let totalShares = 0;
+            
+            rows.forEach(row => {
+                const price = parseFloat(row.querySelector('.price').value) || 0;
+                const qty = parseFloat(row.querySelector('.qty').value) || 0;
+                const subtotal = price * qty;
+                
+                // 更新小計
+                row.querySelector('.subtotal-value').textContent = subtotal.toFixed(2);
+                
+                totalCost += subtotal;
+                totalShares += qty;
+            });
+            
+            // 計算平均價格
+            const avgPrice = totalShares > 0 ? (totalCost / totalShares) : 0;
+            
+            // 更新結果
+            document.getElementById('avg-price').textContent = avgPrice.toFixed(2);
+            document.getElementById('total-shares').textContent = totalShares;
+            document.getElementById('total-cost').textContent = totalCost.toFixed(2);
         }
     </script>
 </body>
