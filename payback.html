@@ -5,14 +5,14 @@
     <link rel="apple-touch-icon" href="/stock/favicon.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <input type="button" onclick="javascript:location.href='https://hsuanman.github.io/stock/'" value="平價計算" style="width:100px" ></input>
-    <title>股票回本計算機（含股息）</title>
+    <input type="button" onclick="javascript:location.href='https://hsuanman.github.io/stock/'" value="平價計算" style="width:100px" >
+    <title>股票/ETF回本計算機（含稅費）</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             max-width: 800px;
             margin: 0 auto;
-            padding: 15px;
+            padding: 20px;
             line-height: 1.6;
             color: #333;
         }
@@ -60,32 +60,44 @@
         }
         .result {
             margin-top: 20px;
-            padding: 15px;
+            padding: 20px;
             background-color: #e8f4fc;
-            border-radius: 4px;
+            border-radius: 8px;
             border-left: 4px solid #3498db;
         }
         .highlight {
             font-size: 1.2em;
-            color: #e74c3c;
             font-weight: bold;
         }
         .positive {
             color: #27ae60;
         }
+        .negative {
+            color: #e74c3c;
+        }
+        .tax-info {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
         @media (max-width: 480px) {
             .container {
                 padding: 15px;
-            }
-            input, select, button {
-                padding: 12px;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>股票回本計算機（含股息）</h1>
+        <h1>股票/ETF回本計算機（含稅費）</h1>
+        
+        <div class="form-group">
+            <label for="investment-type">投資類型</label>
+            <select id="investment-type">
+                <option value="stock">個股</option>
+                <option value="etf">ETF</option>
+            </select>
+        </div>
         
         <div class="form-group">
             <label for="shares">持有股數</label>
@@ -104,36 +116,65 @@
         
         <div class="form-group">
             <label for="dividends">已領取股息總額（元）</label>
-            <input type="number" id="dividends" step="0.01" min="0" placeholder="200">
+            <input type="number" id="dividends" step="0.01" min="0" placeholder="3000">
+        </div>
+        
+        <div class="form-group">
+            <label for="fee-rate">券商手續費率（%）</label>
+            <input type="number" id="fee-rate" step="0.001" value="0.1425">
+            <div class="tax-info">一般股票交易手續費率為0.1425%</div>
+        </div>
+        
+        <div class="form-group">
+            <label for="min-fee">最低手續費（元）</label>
+            <input type="number" id="min-fee" step="1" value="20">
+        </div>
+        
+        <div class="form-group" id="tax-group">
+            <label for="tax-rate">證券交易稅率（%）</label>
+            <input type="number" id="tax-rate" step="0.01" value="0.3">
+            <div class="tax-info">個股賣出稅率0.3%，ETF為0.1%</div>
         </div>
         
         <div class="form-group">
             <label for="target">預期報酬率（%）</label>
             <input type="number" id="target" step="0.1" value="0">
-            <small>輸入0表示僅計算回本（不虧不賺）</small>
+            <div class="tax-info">輸入0表示僅計算回本（不虧不賺）</div>
         </div>
         
         <button id="calculate">計算回本目標價</button>
         
         <div class="result" id="result">
+            <h3>基本資訊</h3>
             <p>實際投入成本: <span id="total-cost">50,000</span> 元</p>
             <p>已領股息: <span id="total-dividends">3,000</span> 元</p>
             <p>淨投入成本: <span id="net-cost">47,000</span> 元</p>
+            
+            <h3>當前狀況</h3>
             <p>當前市值: <span id="current-value">40,000</span> 元</p>
-            <p>目前損益: <span id="current-profit" class="highlight">-7,000</span> 元</p>
-            <p>回本目標價: <span id="break-even" class="highlight positive">47.00</span> 元/股</p>
-            <p>考慮預期報酬後的目標價: <span id="target-price" class="highlight positive">47.00</span> 元/股</p>
+            <p>賣出手續費: <span id="fee">57</span> 元</p>
+            <p>證券交易稅: <span id="tax">120</span> 元</p>
+            <p>淨變現金額: <span id="net-current-value">39,823</span> 元</p>
+            <p>目前損益: <span id="current-profit" class="highlight negative">-7,177</span> 元</p>
+            
+            <h3>回本計算</h3>
+            <p>回本目標價（含稅費）: <span id="break-even" class="highlight positive">47.18</span> 元/股</p>
+            <p>考慮預期報酬後的目標價: <span id="target-price" class="highlight positive">47.18</span> 元/股</p>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // 綁定計算按鈕
-            document.getElementById('calculate').addEventListener('click', calculate);
+            // 綁定投資類型變更事件
+            document.getElementById('investment-type').addEventListener('change', function() {
+                const isETF = this.value === 'etf';
+                document.getElementById('tax-rate').value = isETF ? 0.1 : 0.3;
+                calculate();
+            });
             
-            // 綁定輸入欄位變更時自動計算
-            const inputs = document.querySelectorAll('input');
-            inputs.forEach(input => {
+            // 綁定計算按鈕和輸入欄位
+            document.getElementById('calculate').addEventListener('click', calculate);
+            document.querySelectorAll('input').forEach(input => {
                 input.addEventListener('input', calculate);
             });
             
@@ -147,32 +188,64 @@
             const cost = parseFloat(document.getElementById('cost').value) || 0;
             const currentPrice = parseFloat(document.getElementById('current').value) || 0;
             const dividends = parseFloat(document.getElementById('dividends').value) || 0;
-            const targetReturn = parseFloat(document.getElementById('target').value) || 0;
+            const feeRate = parseFloat(document.getElementById('fee-rate').value) / 100 || 0;
+            const minFee = parseFloat(document.getElementById('min-fee').value) || 0;
+            const taxRate = parseFloat(document.getElementById('tax-rate').value) / 100 || 0;
+            const targetReturn = parseFloat(document.getElementById('target').value) / 100 || 0;
             
-            // 計算各項數值
+            // 計算基本數值
             const totalCost = shares * cost;
             const netCost = totalCost - dividends;
             const currentValue = shares * currentPrice;
-            const currentProfit = currentValue - netCost;
             
-            // 計算回本目標價
-            const breakEvenPrice = netCost / shares;
+            // 計算交易成本
+            const fee = Math.max(currentValue * feeRate, minFee);
+            const tax = currentValue * taxRate;
+            const netCurrentValue = currentValue - fee - tax;
+            const currentProfit = netCurrentValue - netCost;
             
-            // 計算考慮預期報酬的目標價
-            const targetPrice = breakEvenPrice * (1 + targetReturn / 100);
+            // 計算回本目標價（考慮稅費）
+            const breakEvenPrice = calculateBreakEvenPrice(shares, netCost, feeRate, minFee, taxRate);
+            const targetPrice = breakEvenPrice * (1 + targetReturn);
             
             // 更新顯示結果
             document.getElementById('total-cost').textContent = formatNumber(totalCost);
             document.getElementById('total-dividends').textContent = formatNumber(dividends);
             document.getElementById('net-cost').textContent = formatNumber(netCost);
             document.getElementById('current-value').textContent = formatNumber(currentValue);
+            document.getElementById('fee').textContent = formatNumber(fee);
+            document.getElementById('tax').textContent = formatNumber(tax);
+            document.getElementById('net-current-value').textContent = formatNumber(netCurrentValue);
             
             const profitElement = document.getElementById('current-profit');
             profitElement.textContent = formatNumber(currentProfit);
-            profitElement.className = currentProfit >= 0 ? 'highlight positive' : 'highlight';
+            profitElement.className = currentProfit >= 0 ? 'highlight positive' : 'highlight negative';
             
             document.getElementById('break-even').textContent = breakEvenPrice.toFixed(2);
             document.getElementById('target-price').textContent = targetPrice.toFixed(2);
+        }
+        
+        // 計算考慮稅費的回本價
+        function calculateBreakEvenPrice(shares, netCost, feeRate, minFee, taxRate) {
+            if (shares <= 0) return 0;
+            
+            // 使用迭代法計算考慮稅費後的實際回本價
+            let price = netCost / shares; // 初始估算
+            let prevPrice = 0;
+            const precision = 0.0001; // 精確到0.01%
+            
+            while (Math.abs(price - prevPrice) > precision) {
+                prevPrice = price;
+                const value = shares * price;
+                const fee = Math.max(value * feeRate, minFee);
+                const tax = value * taxRate;
+                const netValue = value - fee - tax;
+                
+                // 調整價格直到淨值等於淨成本
+                price = price * (netCost / netValue);
+            }
+            
+            return price;
         }
         
         // 格式化數字顯示（加上千分位逗號）
@@ -182,3 +255,4 @@
     </script>
 </body>
 </html>
+
