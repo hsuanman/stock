@@ -1,238 +1,1075 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-    <link rel="icon" href="/stock/favicon.ico" type="image/x-icon">
-    <link rel="apple-touch-icon" href="/stock/favicon.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <input type="button" onclick="window.open('/stock/payback.html')" value="回本計算" style="width:100px" ></input>
-    <title>股票平均價格計算機</title>
+    <title>股票計算工具集 - 平價/回本/融資計算</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📈</text></svg>">
     <style>
+        * {
+            box-sizing: border-box;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 15px;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f7fa;
+            color: #333;
             line-height: 1.6;
         }
-        h1 {
-            color: #333;
-            text-align: center;
-            margin-bottom: 15px;
-            font-size: 1.5rem;
-        }
+        
         .container {
-            background-color: #f9f9f9;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
         }
-        .input-row {
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e1e5eb;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .description {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .tabs {
             display: flex;
             flex-wrap: wrap;
-            align-items: center;
-            margin-bottom: 10px;
-            padding: 10px;
             background-color: white;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-            gap: 8px;
+            border-radius: 8px 8px 0 0;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 0;
         }
-        .input-group {
+        
+        .tab {
             flex: 1;
+            padding: 18px 15px;
+            text-align: center;
+            cursor: pointer;
+            background-color: #f8f9fa;
+            border-bottom: 3px solid transparent;
+            font-weight: 600;
+            transition: all 0.3s ease;
             min-width: 120px;
         }
+        
+        .tab:hover {
+            background-color: #e9ecef;
+        }
+        
+        .tab.active {
+            background-color: white;
+            border-bottom-color: #3498db;
+            color: #3498db;
+        }
+        
+        .tab-content {
+            display: none;
+            background-color: white;
+            padding: 25px;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .tab-title {
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
         label {
             display: block;
-            margin-bottom: 3px;
-            font-weight: bold;
-            color: #555;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+            text-align: left;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            text-align: left;
+        }
+        
+        input:focus, select:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        /* 平均價格計算機 - 修正輸入行樣式 */
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 6px;
+            border-left: 4px solid #e9ecef;
+            text-align: left;
+            flex-wrap: nowrap;
+        }
+        
+        .input-group {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .input-group label {
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+            white-space: nowrap;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 8px 10px;
             font-size: 0.9rem;
         }
-        input {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            width: 100%;
-            box-sizing: border-box;
-            font-size: 1rem;
+        
+        .subtotal {
+            font-weight: bold;
+            color: #9b59b6;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            min-width: 120px;
+            text-align: right;
         }
-        button {
-            padding: 10px 15px;
-            background-color: #4CAF50;
+        
+        .remove-row {
+            background-color: #e74c3c;
             color: white;
             border: none;
             border-radius: 4px;
-            cursor: pointer;
-            margin: 5px;
-            font-size: 1rem;
-            white-space: nowrap;
-        }
-        #add-row {
-            background-color: #2196F3;
-            width: 100%;
-            margin: 10px 0;
-        }
-        .subtotal {
-            margin-left: auto;
-            font-weight: bold;
-            color: #E91E63;
-            font-size: 0.9rem;
-            min-width: 100px;
-            text-align: right;
-        }
-        #result {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #e8f5e9;
-            border-radius: 4px;
-            border-left: 4px solid #4CAF50;
-        }
-        .avg-price {
-            font-size: 1.3rem;
-            color: #2E7D32;
-            font-weight: bold;
-        }
-        .remove-row {
-            background-color: #f44336;
             padding: 8px 12px;
-            margin-left: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+            white-space: nowrap;
+            font-size: 0.9rem;
         }
         
-        /* 手機版專用樣式 */
-        @media (max-width: 480px) {
-            body {
-                padding: 10px;
+        .remove-row:hover {
+            background-color: #c0392b;
+        }
+        
+        button.primary {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 14px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        button.primary:hover {
+            background-color: #2980b9;
+        }
+        
+        button.secondary {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 12px 20px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button.secondary:hover {
+            background-color: #27ae60;
+        }
+        
+        .result-box {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            text-align: left;
+        }
+        
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #ddd;
+        }
+        
+        .result-value {
+            font-weight: 700;
+            color: #3498db; /* 藍色數字 */
+        }
+        
+        .highlight {
+            font-size: 1.3rem;
+            color: #2c3e50;
+            font-weight: 700;
+        }
+        
+        .positive {
+            color: #27ae60; /* 綠色：賠錢 */
+        }
+        
+        .negative {
+            color: #e74c3c; /* 紅色：賺錢 */
+        }
+        
+        .tax-info {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            margin-top: 5px;
+            text-align: left;
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .info-box {
+            background-color: #e8f4fc;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+            text-align: left;
+        }
+        
+        /* 投資類型按鈕 */
+        .investment-type-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .investment-type-btn {
+            flex: 1;
+            padding: 15px 10px;
+            text-align: center;
+            background-color: #ecf0f1;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .investment-type-btn.active.stock {
+            background-color: #3498db;
+            color: white;
+            border-color: #2980b9;
+        }
+        
+        .investment-type-btn.active.etf {
+            background-color: #2ecc71;
+            color: white;
+            border-color: #27ae60;
+        }
+        
+        .investment-type-btn.active.daytrade {
+            background-color: #f39c12;
+            color: white;
+            border-color: #e67e22;
+        }
+        
+        @media (max-width: 768px) {
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
             }
+            
+            .input-row {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            
+            .input-group {
+                flex: 1 0 calc(50% - 10px);
+            }
+            
+            .subtotal {
+                flex: 1 0 100%;
+                text-align: left;
+                margin-top: 5px;
+            }
+            
+            .remove-row {
+                flex: 0 0 auto;
+            }
+            
+            .tab {
+                min-width: 100px;
+                padding: 15px 10px;
+                font-size: 14px;
+            }
+            
+            .investment-type-buttons {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            
+            .investment-type-btn {
+                flex: 1 0 calc(33.333% - 10px);
+                padding: 12px 8px;
+                font-size: 0.9rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
             .container {
                 padding: 10px;
             }
+            
+            .tab-content {
+                padding: 15px;
+            }
+            
+            .tab {
+                flex-basis: 100%;
+                padding: 12px 10px;
+            }
+            
             .input-row {
                 padding: 8px;
             }
-            input {
-                padding: 8px;
+            
+            .input-group {
+                flex: 1 0 100%;
             }
-            button {
-                padding: 8px 12px;
+            
+            .subtotal {
+                flex: 1 0 100%;
             }
-            #add-row {
-                margin: 8px 0;
+            
+            .investment-type-buttons {
+                flex-direction: column;
+            }
+            
+            .investment-type-btn {
+                flex: 1 0 100%;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>股票平均價格計算機</h1>
+        <header>
+            <h1>股票計算工具集</h1>
+            <p class="description">一站式股票投資計算工具，包含平均價格計算、回本計算（含稅費）和融資金額試算功能</p>
+        </header>
         
-        <div id="inputs">
-            <!-- 輸入欄位會動態新增在這裡 -->
+        <div class="tabs">
+            <div class="tab active" data-tab="tab1">平均價格計算</div>
+            <div class="tab" data-tab="tab2">回本計算</div>
+            <div class="tab" data-tab="tab3">融資試算</div>
         </div>
         
-        <button id="add-row">+ 新增一筆</button>
-        
-        <div id="result">
-            <p>平均成本價: <span class="avg-price" id="avg-price">0.00</span> 元/股</p>
-            <p>總股數: <span id="total-shares">0</span> 股</p>
-            <p>總投資金額: <span id="total-cost">0</span> 元</p>
+        <!-- 平均價格計算 -->
+        <div id="tab1" class="tab-content active">
+            <h2 class="tab-title">股票平均價格計算機</h2>
+            <p style="text-align: left;">輸入多次買入的價格與數量，計算平均持股成本（數量預設為1000股）</p>
+            
+            <div id="inputs-container">
+                <!-- 輸入欄位會動態新增在這裡 -->
+            </div>
+            
+            <button id="add-row" class="secondary">+ 新增一筆交易</button>
+            
+            <div class="result-box">
+                <div class="result-item">
+                    <span>平均成本價：</span>
+                    <span class="result-value highlight" id="avg-price">0.00</span> 元/股
+                </div>
+                <div class="result-item">
+                    <span>總股數：</span>
+                    <span class="result-value" id="total-shares">0</span> 股
+                </div>
+                <div class="result-item">
+                    <span>總投資金額：</span>
+                    <span class="result-value" id="total-cost">0</span> 元
+                </div>
+            </div>
         </div>
+        
+        <!-- 回本計算（含稅費） -->
+        <div id="tab2" class="tab-content">
+            <h2 class="tab-title">股票/ETF回本計算機（含稅費）</h2>
+            <p style="text-align: left;">考慮手續費和交易稅，計算實際回本價格</p>
+            
+            <div class="investment-type-buttons">
+                <div class="investment-type-btn active stock" data-type="stock">個股</div>
+                <div class="investment-type-btn etf" data-type="etf">ETF</div>
+                <div class="investment-type-btn daytrade" data-type="daytrade">當沖試算</div>
+            </div>
+            
+            <div class="grid-2">
+                <div class="form-group">
+                    <label for="shares">持有股數</label>
+                    <input type="number" id="shares" min="1" value="1000">
+                </div>
+                
+                <div class="form-group">
+                    <label for="cost">每股平均成本（元）</label>
+                    <input type="number" id="cost" step="0.01" min="0" value="50">
+                </div>
+            </div>
+            
+            <div class="grid-2">
+                <div class="form-group">
+                    <label for="current">當前股價（元）</label>
+                    <input type="number" id="current" step="0.01" min="0" value="40">
+                </div>
+                
+                <div class="form-group">
+                    <label for="dividends">已領取股息總額（元）</label>
+                    <input type="number" id="dividends" step="0.01" min="0" value="3000">
+                </div>
+            </div>
+            
+            <div class="info-box">
+                <h3 style="margin-top: 0; text-align: left;">交易成本設定</h3>
+                <div class="grid-3">
+                    <div class="form-group">
+                        <label for="fee-rate">券商手續費率（%）</label>
+                        <input type="number" id="fee-rate" step="0.001" value="0.1425">
+                        <div class="tax-info">一般為0.1425%，當沖同此費率</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="min-fee">最低手續費（元）</label>
+                        <input type="number" id="min-fee" step="1" value="20">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tax-rate">證券交易稅率（%）</label>
+                        <input type="number" id="tax-rate" step="0.01" value="0.3">
+                        <div class="tax-info">個股0.3%，ETF為0.1%，當沖為0.15%</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid-2">
+                <div class="form-group">
+                    <label for="target">預期報酬率（%）</label>
+                    <input type="number" id="target" step="0.1" value="0">
+                    <div class="tax-info">輸入0表示僅計算回本（不虧不賺）</div>
+                </div>
+                
+                <div class="form-group">
+                    <!-- 預留空間保持對齊 -->
+                </div>
+            </div>
+            
+            <button id="calculate-breakeven" class="primary">計算回本目標價</button>
+            
+            <div class="result-box">
+                <h3 style="text-align: left;">基本資訊</h3>
+                <div class="result-item">
+                    <span>實際投入成本：</span>
+                    <span class="result-value" id="total-cost-break">50,000</span> 元
+                </div>
+                <div class="result-item">
+                    <span>已領股息：</span>
+                    <span class="result-value" id="total-dividends">3,000</span> 元
+                </div>
+                <div class="result-item">
+                    <span>淨投入成本：</span>
+                    <span class="result-value" id="net-cost">47,000</span> 元
+                </div>
+                
+                <h3 style="text-align: left;">當前狀況</h3>
+                <div class="result-item">
+                    <span>當前市值：</span>
+                    <span class="result-value" id="current-value">40,000</span> 元
+                </div>
+                <div class="result-item">
+                    <span>賣出手續費：</span>
+                    <span class="result-value" id="fee">57</span> 元
+                </div>
+                <div class="result-item">
+                    <span>證券交易稅：</span>
+                    <span class="result-value" id="tax">120</span> 元
+                </div>
+                <div class="result-item">
+                    <span>淨變現金額：</span>
+                    <span class="result-value" id="net-current-value">39,823</span> 元
+                </div>
+                <div class="result-item">
+                    <span>目前損益：</span>
+                    <span class="result-value negative" id="current-profit">-7,177</span> 元
+                </div>
+                
+                <h3 style="text-align: left;">回本計算</h3>
+                <div class="result-item">
+                    <span>回本目標價（含稅費）：</span>
+                    <span class="result-value highlight" id="break-even">47.18</span> 元/股
+                </div>
+                <div class="result-item">
+                    <span>考慮預期報酬後的目標價：</span>
+                    <span class="result-value highlight" id="target-price">47.18</span> 元/股
+                </div>
+            </div>
+        </div>
+        
+        <!-- 融資金額試算 -->
+        <div id="tab3" class="tab-content">
+            <h2 class="tab-title">融資金額試算</h2>
+            <p style="text-align: left;">根據股票市值和融資比例，計算可融資額度及相關費用</p>
+            
+            <div class="grid-2">
+                <div class="form-group">
+                    <label for="stock-price">股票現價（元）</label>
+                    <input type="number" id="stock-price" step="0.01" min="0" value="138">
+                </div>
+                
+                <div class="form-group">
+                    <label for="stock-quantity">持股數量（股）</label>
+                    <input type="number" id="stock-quantity" min="1" value="2000">
+                </div>
+            </div>
+            
+            <div class="grid-2">
+                <div class="form-group">
+                    <label for="financing-ratio">融資比例（%）</label>
+                    <select id="financing-ratio">
+                        <option value="60">60% (一般股票)</option>
+                        <option value="50">50% (高風險股票)</option>
+                        <option value="90">90% (政府債券)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="interest-rate">融資利率（%）</label>
+                    <input type="number" id="interest-rate" step="0.01" min="0" value="6.5">
+                    <div class="tax-info">年利率，通常為6%~7%</div>
+                </div>
+            </div>
+            
+            <div class="grid-2">
+                <div class="form-group">
+                    <label for="financing-term">融資天數</label>
+                    <input type="number" id="financing-term" min="1" value="30">
+                    <div class="tax-info">融資使用天數</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="maintenance-rate">維持率要求（%）</label>
+                    <input type="number" id="maintenance-rate" step="0.1" min="0" value="130">
+                    <div class="tax-info">低於此比率需補繳保證金</div>
+                </div>
+            </div>
+            
+            <div class="info-box">
+                <h3 style="margin-top: 0; text-align: left;">賣出價格投報率計算</h3>
+                <div class="form-group" style="margin-top: 15px;">
+                    <label for="selling-price">預期賣出價格（元）</label>
+                    <input type="number" id="selling-price" step="0.01" min="0" value="110">
+                </div>
+            </div>
+            
+            <button id="calculate-financing" class="primary">計算融資額度及投報率</button>
+            
+            <div class="result-box">
+                <h3 style="text-align: left;">基本資訊</h3>
+                <div class="result-item">
+                    <span>股票總市值：</span>
+                    <span class="result-value" id="stock-value">276,000</span> 元
+                </div>
+                <div class="result-item">
+                    <span>融資比例：</span>
+                    <span class="result-value" id="ratio-display">60</span>%
+                </div>
+                <div class="result-item">
+                    <span>融資利率：</span>
+                    <span class="result-value" id="rate-display">6.5</span>%
+                </div>
+                
+                <h3 style="text-align: left;">融資額度計算</h3>
+                <div class="result-item">
+                    <span>可融資金額：</span>
+                    <span class="result-value highlight" id="financing-amount">165,600</span> 元
+                </div>
+                <div class="result-item">
+                    <span>自備款金額：</span>
+                    <span class="result-value" id="self-amount">110,400</span> 元
+                </div>
+                <div class="result-item">
+                    <span>融資利息：</span>
+                    <span class="result-value" id="interest-amount">886</span> 元
+                </div>
+                <div class="result-item">
+                    <span>融資成本率（年）：</span>
+                    <span class="result-value" id="annual-cost-rate">6.5</span>%
+                </div>
+                
+                <h3 style="text-align: left;">風險指標</h3>
+                <div class="result-item">
+                    <span>初始維持率：</span>
+                    <span class="result-value" id="initial-maintenance">166.7</span>%
+                </div>
+                <div class="result-item">
+                    <span>斷頭價位：</span>
+                    <span class="result-value negative" id="liquidation-price">89.6</span> 元
+                </div>
+                <div class="result-item">
+                    <span>股價下跌安全空間：</span>
+                    <span class="result-value" id="safety-margin">35.1</span>%
+                </div>
+                
+                <h3 style="text-align: left;">賣出價格投報率計算</h3>
+                <div class="result-item">
+                    <span>賣出總金額：</span>
+                    <span class="result-value" id="selling-total">220,000</span> 元
+                </div>
+                <div class="result-item">
+                    <span>賣出手續費：</span>
+                    <span class="result-value" id="selling-fee">314</span> 元
+                </div>
+                <div class="result-item">
+                    <span>賣出交易稅：</span>
+                    <span class="result-value" id="selling-tax">660</span> 元
+                </div>
+                <div class="result-item">
+                    <span>融資利息成本：</span>
+                    <span class="result-value" id="total-interest">886</span> 元
+                </div>
+                <div class="result-item">
+                    <span>總成本（買入+利息）：</span>
+                    <span class="result-value" id="total-cost-financing">276,886</span> 元
+                </div>
+                <div class="result-item">
+                    <span>淨收益（扣除所有成本）：</span>
+                    <span class="result-value positive" id="net-profit">-57,860</span> 元
+                </div>
+                <div class="result-item">
+                    <span>自備款投報率：</span>
+                    <span class="result-value positive highlight" id="roi">-52.4</span>%
+                </div>
+                <div class="result-item">
+                    <span>年化報酬率：</span>
+                    <span class="result-value positive" id="annualized-roi">-637.4</span>%
+                </div>
+            </div>
+            
+            <div class="info-box">
+                <h3 style="text-align: left;">融資交易說明</h3>
+                <ul style="text-align: left;">
+                    <li>融資交易是指投資人向券商借錢買股票，只需支付部分自備款</li>
+                    <li>融資比例依股票種類而定，一般上市股票為60%</li>
+                    <li>維持率低於130%時會收到追繳通知，需補繳保證金</li>
+                    <li>維持率低於120%時，券商有權強制賣出股票（斷頭）</li>
+                    <li>融資利息按日計算，年利率通常在6%~7%之間</li>
+                    <li>賣出價格投報率計算已扣除融資利息、手續費和交易稅</li>
+                    <li>投報率計算公式：[(賣出淨收入 - 總成本) / 自備款] × 100%</li>
+                </ul>
+            </div>
+        </div>
+        
+        <footer style="text-align: center; margin-top: 40px; color: #7f8c8d; font-size: 0.9rem;">
+            <p>股票計算工具集 &copy; 2023 | 本工具僅供參考，投資有風險，請謹慎決策</p>
+        </footer>
     </div>
 
     <script>
-        // 初始化第一行
+        // ========== 頁面切換功能 ==========
         document.addEventListener('DOMContentLoaded', function() {
+            // 標籤頁切換
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const targetTab = tab.getAttribute('data-tab');
+                    
+                    // 更新活躍標籤
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    // 顯示對應內容
+                    tabContents.forEach(content => {
+                        content.classList.remove('active');
+                        if (content.id === targetTab) {
+                            content.classList.add('active');
+                        }
+                    });
+                });
+            });
+            
+            // 初始化各功能
+            initAvgPriceCalculator();
+            initBreakEvenCalculator();
+            initFinancingCalculator();
+        });
+        
+        // ========== 平均價格計算機 ==========
+        function initAvgPriceCalculator() {
+            const inputsContainer = document.getElementById('inputs-container');
+            const addRowBtn = document.getElementById('add-row');
+            
+            // 初始化第一行
             addRow();
             
-            // 綁定新增按鈕事件
-            document.getElementById('add-row').addEventListener('click', function() {
-                if (document.querySelectorAll('.input-row').length < 5) {
+            // 新增一行
+            addRowBtn.addEventListener('click', function() {
+                if (document.querySelectorAll('.input-row').length < 10) {
                     addRow();
                 } else {
-                    alert('最多只能輸入5筆交易記錄');
+                    alert('最多只能輸入10筆交易記錄');
                 }
             });
-        });
-
-        // 新增一行輸入欄位
-        function addRow() {
-            const inputsContainer = document.getElementById('inputs');
-            const rowCount = document.querySelectorAll('.input-row').length + 1;
             
-            const row = document.createElement('div');
-            row.className = 'input-row';
-            row.innerHTML = `
-                <div class="input-group">
-                    <label>買入價格 ${rowCount}</label>
-                    <input type="number" class="price" placeholder="價格" step="0.01" min="0">
-                </div>
-                <div class="input-group">
-                    <label>數量</label>
-                    <input type="number" class="qty" placeholder="股數" min="0">
-                </div>
-                <div class="subtotal">小計: <span class="subtotal-value">0</span> 元</div>
-                <button class="remove-row">×</button>
-            `;
+            function addRow() {
+                const rowCount = document.querySelectorAll('.input-row').length + 1;
+                
+                const row = document.createElement('div');
+                row.className = 'input-row';
+                row.innerHTML = `
+                    <div class="input-group">
+                        <label style="text-align: left;">買入價格 ${rowCount}</label>
+                        <input type="number" class="price" placeholder="價格" step="0.01" min="0" value="${rowCount === 1 ? 50 : ''}">
+                    </div>
+                    <div class="input-group">
+                        <label style="text-align: left;">數量</label>
+                        <input type="number" class="qty" placeholder="股數" min="0" value="1000">
+                    </div>
+                    <div class="subtotal">小計: <span class="subtotal-value">${rowCount === 1 ? '50,000' : '0'}</span> 元</div>
+                    <button class="remove-row">× 刪除</button>
+                `;
+                
+                inputsContainer.appendChild(row);
+                
+                // 綁定輸入事件
+                const priceInput = row.querySelector('.price');
+                const qtyInput = row.querySelector('.qty');
+                
+                priceInput.addEventListener('input', calculateAvgPrice);
+                qtyInput.addEventListener('input', calculateAvgPrice);
+                
+                // 綁定刪除按鈕
+                row.querySelector('.remove-row').addEventListener('click', function() {
+                    if (document.querySelectorAll('.input-row').length > 1) {
+                        row.remove();
+                        updateRowNumbers();
+                        calculateAvgPrice();
+                    } else {
+                        alert('至少需要保留一筆交易記錄');
+                    }
+                });
+                
+                // 自動計算
+                calculateAvgPrice();
+            }
             
-            inputsContainer.appendChild(row);
+            function updateRowNumbers() {
+                const rows = document.querySelectorAll('.input-row');
+                rows.forEach((row, index) => {
+                    const label = row.querySelector('label');
+                    if (label) {
+                        label.textContent = `買入價格 ${index + 1}`;
+                    }
+                });
+            }
             
-            // 綁定輸入事件
-            const priceInput = row.querySelector('.price');
-            const qtyInput = row.querySelector('.qty');
+            function calculateAvgPrice() {
+                const rows = document.querySelectorAll('.input-row');
+                let totalCost = 0;
+                let totalShares = 0;
+                
+                rows.forEach(row => {
+                    const price = parseFloat(row.querySelector('.price').value) || 0;
+                    const qty = parseFloat(row.querySelector('.qty').value) || 0;
+                    const subtotal = Math.round(price * qty);
+                    
+                    // 更新小計
+                    const subtotalValue = row.querySelector('.subtotal-value');
+                    subtotalValue.textContent = subtotal.toLocaleString();
+                    
+                    totalCost += subtotal;
+                    totalShares += qty;
+                });
+                
+                // 計算平均價格（保留小數點後兩位）
+                const avgPrice = totalShares > 0 ? (totalCost / totalShares).toFixed(2) : "0.00";
+                
+                // 更新結果
+                document.getElementById('avg-price').textContent = avgPrice;
+                document.getElementById('total-shares').textContent = totalShares.toLocaleString();
+                document.getElementById('total-cost').textContent = totalCost.toLocaleString();
+            }
+        }
+        
+        // ========== 回本計算機 ==========
+        function initBreakEvenCalculator() {
+            const investmentTypeButtons = document.querySelectorAll('.investment-type-btn');
+            const calculateBtn = document.getElementById('calculate-breakeven');
+            const taxRateInput = document.getElementById('tax-rate');
             
-            priceInput.addEventListener('input', calculateAll);
-            qtyInput.addEventListener('input', calculateAll);
-            
-            // 綁定刪除按鈕
-            row.querySelector('.remove-row').addEventListener('click', function() {
-                row.remove();
-                updateRowNumbers();
-                calculateAll();
+            // 投資類型按鈕切換
+            investmentTypeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // 更新按鈕狀態
+                    investmentTypeButtons.forEach(btn => {
+                        btn.classList.remove('active');
+                        btn.classList.remove('stock', 'etf', 'daytrade');
+                    });
+                    
+                    const type = this.getAttribute('data-type');
+                    this.classList.add('active');
+                    this.classList.add(type);
+                    
+                    // 更新稅率
+                    if (type === 'etf') {
+                        taxRateInput.value = 0.1;
+                    } else if (type === 'daytrade') {
+                        taxRateInput.value = 0.15; // 當沖稅率減半
+                    } else {
+                        taxRateInput.value = 0.3; // 個股
+                    }
+                    
+                    // 重新計算
+                    calculateBreakEven();
+                });
             });
             
-            // 自動聚焦到新欄位的價格輸入框
-            priceInput.focus();
-        }
-
-        // 更新行號
-        function updateRowNumbers() {
-            const rows = document.querySelectorAll('.input-row');
-            rows.forEach((row, index) => {
-                const label = row.querySelector('label');
-                if (label) {
-                    label.textContent = `買入價格 ${index + 1}`;
+            // 綁定計算按鈕和輸入欄位
+            calculateBtn.addEventListener('click', calculateBreakEven);
+            const inputs = document.querySelectorAll('#tab2 input, #tab2 select');
+            inputs.forEach(input => {
+                input.addEventListener('input', calculateBreakEven);
+            });
+            
+            // 初始計算
+            calculateBreakEven();
+            
+            function calculateBreakEven() {
+                // 獲取輸入值
+                const shares = parseInt(document.getElementById('shares').value) || 0;
+                const cost = parseFloat(document.getElementById('cost').value) || 0;
+                const currentPrice = parseFloat(document.getElementById('current').value) || 0;
+                const dividends = parseFloat(document.getElementById('dividends').value) || 0;
+                const feeRate = parseFloat(document.getElementById('fee-rate').value) / 100 || 0;
+                const minFee = parseFloat(document.getElementById('min-fee').value) || 0;
+                const taxRate = parseFloat(document.getElementById('tax-rate').value) / 100 || 0;
+                const targetReturn = parseFloat(document.getElementById('target').value) / 100 || 0;
+                
+                // 計算基本數值
+                const totalCost = shares * cost;
+                const netCost = totalCost - dividends;
+                const currentValue = shares * currentPrice;
+                
+                // 計算交易成本
+                const fee = Math.max(currentValue * feeRate, minFee);
+                const tax = currentValue * taxRate;
+                const netCurrentValue = currentValue - fee - tax;
+                const currentProfit = netCurrentValue - netCost;
+                
+                // 計算回本目標價（考慮稅費）
+                const breakEvenPrice = calculateBreakEvenPrice(shares, netCost, feeRate, minFee, taxRate);
+                const targetPrice = breakEvenPrice * (1 + targetReturn);
+                
+                // 更新顯示結果
+                document.getElementById('total-cost-break').textContent = formatNumber(totalCost);
+                document.getElementById('total-dividends').textContent = formatNumber(dividends);
+                document.getElementById('net-cost').textContent = formatNumber(netCost);
+                document.getElementById('current-value').textContent = formatNumber(currentValue);
+                document.getElementById('fee').textContent = formatNumber(fee);
+                document.getElementById('tax').textContent = formatNumber(tax);
+                document.getElementById('net-current-value').textContent = formatNumber(netCurrentValue);
+                
+                const profitElement = document.getElementById('current-profit');
+                profitElement.textContent = formatNumber(currentProfit);
+                
+                // 賺錢顯示紅色，賠錢顯示綠色
+                if (currentProfit >= 0) {
+                    profitElement.className = 'result-value negative';
+                } else {
+                    profitElement.className = 'result-value positive';
                 }
-            });
+                
+                document.getElementById('break-even').textContent = breakEvenPrice.toFixed(2);
+                document.getElementById('target-price').textContent = targetPrice.toFixed(2);
+                
+                // 目標價的顏色
+                const breakEvenElement = document.getElementById('break-even');
+                const targetPriceElement = document.getElementById('target-price');
+                
+                // 如果目標價高於當前價格，顯示紅色（賺錢），否則顯示綠色（賠錢）
+                const isBreakEvenProfitable = breakEvenPrice > currentPrice;
+                const isTargetProfitable = targetPrice > currentPrice;
+                
+                breakEvenElement.className = isBreakEvenProfitable ? 'result-value negative highlight' : 'result-value positive highlight';
+                targetPriceElement.className = isTargetProfitable ? 'result-value negative highlight' : 'result-value positive highlight';
+            }
+            
+            // 計算考慮稅費的回本價
+            function calculateBreakEvenPrice(shares, netCost, feeRate, minFee, taxRate) {
+                if (shares <= 0) return 0;
+                
+                // 使用迭代法計算考慮稅費後的實際回本價
+                let price = netCost / shares; // 初始估算
+                let prevPrice = 0;
+                const precision = 0.0001; // 精確到0.01%
+                
+                while (Math.abs(price - prevPrice) > precision) {
+                    prevPrice = price;
+                    const value = shares * price;
+                    const fee = Math.max(value * feeRate, minFee);
+                    const tax = value * taxRate;
+                    const netValue = value - fee - tax;
+                    
+                    // 調整價格直到淨值等於淨成本
+                    price = price * (netCost / netValue);
+                }
+                
+                return price;
+            }
         }
-
-        // 計算所有數據
-        function calculateAll() {
-            const rows = document.querySelectorAll('.input-row');
-            let totalCost = 0;
-            let totalShares = 0;
+        
+        // ========== 融資試算 ==========
+        function initFinancingCalculator() {
+            const calculateBtn = document.getElementById('calculate-financing');
+            const sellingPriceInput = document.getElementById('selling-price');
             
-            rows.forEach(row => {
-                const price = parseFloat(row.querySelector('.price').value) || 0;
-                const qty = parseFloat(row.querySelector('.qty').value) || 0;
-                const subtotal = Math.round(price * qty); // 四捨五入到整數
-                
-                // 更新小計
-                row.querySelector('.subtotal-value').textContent = subtotal;
-                
-                totalCost += subtotal;
-                totalShares += qty;
+            // 綁定計算按鈕和輸入欄位
+            calculateBtn.addEventListener('click', calculateFinancing);
+            const inputs = document.querySelectorAll('#tab3 input, #tab3 select');
+            inputs.forEach(input => {
+                input.addEventListener('input', calculateFinancing);
             });
             
-            // 計算平均價格（保留小數點後兩位）
-            const avgPrice = totalShares > 0 ? (totalCost / totalShares).toFixed(2) : "0.00";
+            // 賣出價格輸入框也要觸發計算
+            sellingPriceInput.addEventListener('input', calculateFinancing);
             
-            // 更新結果
-            document.getElementById('avg-price').textContent = avgPrice;
-            document.getElementById('total-shares').textContent = totalShares;
-            document.getElementById('total-cost').textContent = totalCost;
+            // 初始計算
+            calculateFinancing();
+            
+            function calculateFinancing() {
+                // 獲取輸入值
+                const stockPrice = parseFloat(document.getElementById('stock-price').value) || 0;
+                const stockQuantity = parseInt(document.getElementById('stock-quantity').value) || 0;
+                const financingRatio = parseFloat(document.getElementById('financing-ratio').value) / 100 || 0;
+                const interestRate = parseFloat(document.getElementById('interest-rate').value) / 100 || 0;
+                const financingTerm = parseInt(document.getElementById('financing-term').value) || 0;
+                const maintenanceRate = parseFloat(document.getElementById('maintenance-rate').value) / 100 || 0;
+                const sellingPrice = parseFloat(document.getElementById('selling-price').value) || 0;
+                
+                // 計算基本數值
+                const stockValue = stockPrice * stockQuantity;
+                const financingAmount = stockValue * financingRatio;
+                const selfAmount = stockValue - financingAmount;
+                
+                // 計算利息
+                const interestAmount = financingAmount * interestRate * (financingTerm / 365);
+                
+                // 計算風險指標
+                const initialMaintenance = (stockValue / financingAmount) * 100;
+                const liquidationPrice = (financingAmount * maintenanceRate) / stockQuantity;
+                const safetyMargin = ((stockPrice - liquidationPrice) / stockPrice) * 100;
+                
+                // 計算賣出價格投報率（含融資利息）
+                const sellingTotal = sellingPrice * stockQuantity;
+                const sellingFee = Math.max(sellingTotal * 0.001425, 20); // 賣出手續費0.1425%
+                const sellingTax = sellingTotal * 0.003; // 賣出交易稅0.3%
+                const totalCost = stockValue + interestAmount; // 總成本 = 買入成本 + 融資利息
+                const netSellingAmount = sellingTotal - sellingFee - sellingTax; // 賣出淨收入
+                const netProfit = netSellingAmount - totalCost; // 淨收益 = 賣出淨收入 - 總成本
+                const roi = (netProfit / selfAmount) * 100; // 投報率 = 淨收益 / 自備款
+                const annualizedRoi = financingTerm > 0 ? (roi * (365 / financingTerm)) : 0;
+                
+                // 更新顯示結果
+                document.getElementById('stock-value').textContent = formatNumber(stockValue);
+                document.getElementById('ratio-display').textContent = (financingRatio * 100).toFixed(0);
+                document.getElementById('rate-display').textContent = (interestRate * 100).toFixed(1);
+                document.getElementById('financing-amount').textContent = formatNumber(financingAmount);
+                document.getElementById('self-amount').textContent = formatNumber(selfAmount);
+                document.getElementById('interest-amount').textContent = formatNumber(Math.round(interestAmount));
+                document.getElementById('annual-cost-rate').textContent = (interestRate * 100).toFixed(1);
+                document.getElementById('initial-maintenance').textContent = initialMaintenance.toFixed(1);
+                document.getElementById('liquidation-price').textContent = liquidationPrice.toFixed(1);
+                document.getElementById('safety-margin').textContent = safetyMargin.toFixed(1);
+                
+                // 賣出價格投報率結果
+                document.getElementById('selling-total').textContent = formatNumber(sellingTotal);
+                document.getElementById('selling-fee').textContent = formatNumber(Math.round(sellingFee));
+                document.getElementById('selling-tax').textContent = formatNumber(Math.round(sellingTax));
+                document.getElementById('total-interest').textContent = formatNumber(Math.round(interestAmount));
+                document.getElementById('total-cost-financing').textContent = formatNumber(Math.round(totalCost));
+                
+                // 淨收益：賺錢顯示紅色，賠錢顯示綠色
+                const netProfitElement = document.getElementById('net-profit');
+                netProfitElement.textContent = formatNumber(Math.round(netProfit));
+                netProfitElement.className = netProfit >= 0 ? 'result-value negative' : 'result-value positive';
+                
+                // 投報率：賺錢顯示紅色，賠錢顯示綠色
+                const roiElement = document.getElementById('roi');
+                roiElement.textContent = roi.toFixed(1);
+                roiElement.className = roi >= 0 ? 'result-value negative highlight' : 'result-value positive highlight';
+                
+                // 年化報酬率：賺錢顯示紅色，賠錢顯示綠色
+                const annualizedRoiElement = document.getElementById('annualized-roi');
+                annualizedRoiElement.textContent = annualizedRoi.toFixed(1);
+                annualizedRoiElement.className = annualizedRoi >= 0 ? 'result-value negative' : 'result-value positive';
+            }
+        }
+        
+        // ========== 通用函數 ==========
+        // 格式化數字顯示（加上千分位逗號）
+        function formatNumber(num) {
+            return Math.round(num).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         }
     </script>
 </body>
 </html>
-    
-
