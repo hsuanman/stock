@@ -479,14 +479,27 @@
             }
             
             .tabs {
+                /* 改用 flex 佈局確保撐滿，視情況滾動 */
+                display: flex;
                 overflow-x: auto;
                 flex-wrap: nowrap;
+                /* 隱藏捲軸但保留功能 */
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none; 
+            }
+
+            .tabs::-webkit-scrollbar { 
+                display: none; 
             }
             
             .tab {
-                min-width: 120px;
-                padding: 14px 10px;
-                font-size: 0.9rem;
+                /* 關鍵修改：移除固定最小寬度，改用彈性比例 */
+                min-width: auto; 
+                flex: 1; /* 讓四個按鈕平分寬度 */
+                padding: 12px 2px; /* 縮小左右間距以塞入更多文字 */
+                font-size: 0.8rem; /* 字體稍微縮小 */
+                white-space: nowrap; /* 文字不換行 */
+                overflow: hidden; /* 防止溢出 */
             }
             
             .investment-type-buttons {
@@ -495,8 +508,8 @@
             }
             
             .investment-type-btn {
-                min-width: 90px;
-                padding: 10px 6px;
+                min-width: 80px; /* 稍微縮小投資類型按鈕 */
+                padding: 10px 4px;
                 font-size: 0.85rem;
             }
             
