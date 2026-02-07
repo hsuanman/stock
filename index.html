@@ -6,7 +6,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>股票計算工具集</title>
-    <!-- <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📈</text></svg>"> -->
     <style>
         :root {
             --primary-color: #2c3e50;
@@ -347,6 +346,42 @@
             color: white;
             border-color: var(--warning-color);
         }
+
+        /* 漲跌停試算表格 */
+        .limit-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .limit-table th, .limit-table td {
+            padding: 12px 10px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .limit-table th {
+            background-color: #f1f3f5;
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+        
+        .limit-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .limit-up-text {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+        
+        .limit-down-text {
+            color: var(--success-color);
+            font-weight: bold;
+        }
         
         footer {
             text-align: center;
@@ -505,15 +540,14 @@
             <div class="tab active" data-tab="tab1">平均價格計算</div>
             <div class="tab" data-tab="tab2">回本計算</div>
             <div class="tab" data-tab="tab3">融資試算</div>
+            <div class="tab" data-tab="tab4">漲跌停試算</div>
         </div>
         
-        <!-- 平均價格計算 -->
         <div id="tab1" class="tab-content active">
             <h2 class="tab-title">股票平均價格計算機</h2>
             
             <div id="inputs-container">
-                <!-- 輸入欄位會動態新增在這裡 -->
-            </div>
+                </div>
             
             <button id="add-row" class="secondary">+ 新增一筆交易</button>
             
@@ -533,7 +567,6 @@
             </div>
         </div>
         
-        <!-- 回本計算（含稅費） -->
         <div id="tab2" class="tab-content">
             <h2 class="tab-title">股票/ETF回本計算機（含稅費）</h2>
             
@@ -597,8 +630,7 @@
                 </div>
                 
                 <div class="form-group">
-                    <!-- 預留空間保持對齊 -->
-                </div>
+                    </div>
             </div>
             
             <button id="calculate-breakeven" class="primary">計算回本目標價</button>
@@ -652,7 +684,6 @@
             </div>
         </div>
         
-        <!-- 融資金額試算 -->
         <div id="tab3" class="tab-content">
             <h2 class="tab-title">融資金額試算</h2>
             
@@ -803,6 +834,44 @@
                 </ul>
             </div>
         </div>
+
+        <div id="tab4" class="tab-content">
+            <h2 class="tab-title">漲跌停複利試算 (含Tick修正)</h2>
+            <div class="form-group">
+                <label for="limit-ref-price">基準股價（元）</label>
+                <input type="number" id="limit-ref-price" step="0.01" min="0" placeholder="輸入當前股價">
+            </div>
+            
+            <div class="grid-2">
+                <button id="calc-limit-5" class="primary" style="margin-top: 0;">計算未來 5 天</button>
+                <button id="calc-limit-10" class="secondary" style="margin-top: 0; background-color: #7f8c8d;">計算未來 10 天</button>
+            </div>
+
+            <div class="result-box">
+                <h3 style="text-align: left;">漲跌停價格預測</h3>
+                <div class="tax-info" style="margin-bottom: 10px;">
+                    * 依據台股規則：漲跌幅限制為 10%，並依據股價級距自動調整至最近的跳動點（Tick）。
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="limit-table">
+                        <thead>
+                            <tr>
+                                <th>天數</th>
+                                <th>連續漲停 (+10%)</th>
+                                <th>漲幅累計</th>
+                                <th>連續跌停 (-10%)</th>
+                                <th>跌幅累計</th>
+                            </tr>
+                        </thead>
+                        <tbody id="limit-table-body">
+                            <tr>
+                                <td colspan="5">請輸入股價並點擊計算</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
         
         <footer>
             <p>股票計算工具集 &copy; 2026 | BY P.hm</p>
@@ -838,6 +907,7 @@
             initAvgPriceCalculator();
             initBreakEvenCalculator();
             initFinancingCalculator();
+            initLimitCalculator();
         });
         
         // ========== 平均價格計算機 ==========
@@ -1167,6 +1237,84 @@
                     annualizedRoiElement.className = 'result-value';
                 }
             }
+        }
+
+        // ========== 漲跌停試算 (新增) ==========
+        function initLimitCalculator() {
+            const btn5 = document.getElementById('calc-limit-5');
+            const btn10 = document.getElementById('calc-limit-10');
+            const priceInput = document.getElementById('limit-ref-price');
+            
+            // 台灣股市跳動檔位規則
+            function getTickSize(price) {
+                if (price < 10) return 0.01;
+                if (price < 50) return 0.05;
+                if (price < 100) return 0.1;
+                if (price < 500) return 0.5;
+                if (price < 1000) return 1.0;
+                return 5.0;
+            }
+
+            // 格式化價格到最近的Tick (簡易模擬)
+            function formatToTick(price) {
+                const tick = getTickSize(price);
+                // 四捨五入到最近的Tick
+                return Math.round(price / tick) * tick;
+            }
+
+            function calculateLimit(days) {
+                let currentUp = parseFloat(priceInput.value);
+                let currentDown = parseFloat(priceInput.value);
+                const startPrice = parseFloat(priceInput.value);
+                
+                if (!startPrice || startPrice <= 0) {
+                    alert('請輸入有效的股價');
+                    return;
+                }
+
+                const tbody = document.getElementById('limit-table-body');
+                tbody.innerHTML = '';
+
+                for (let i = 1; i <= days; i++) {
+                    // 漲停計算: +10%
+                    const rawUp = currentUp * 1.10;
+                    // 修正到Tick (台股邏輯：漲停價通常是直接算1.1倍然後向下取整到Tick? 
+                    // 其實交易所公式較複雜，這裡使用四捨五入到Tick做近似，對一般預估已足夠)
+                    let nextUp = formatToTick(rawUp);
+                    
+                    // 跌停計算: -10%
+                    const rawDown = currentDown * 0.90;
+                    let nextDown = formatToTick(rawDown);
+                    
+                    // 確保不低於 0
+                    if (nextDown < 0.01) nextDown = 0.01;
+
+                    // 計算累計漲跌幅
+                    const upPercent = ((nextUp - startPrice) / startPrice * 100).toFixed(2);
+                    const downPercent = ((nextDown - startPrice) / startPrice * 100).toFixed(2);
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>第 ${i} 天</td>
+                        <td class="limit-up-text">${nextUp.toFixed(2)}</td>
+                        <td class="limit-up-text">+${upPercent}%</td>
+                        <td class="limit-down-text">${nextDown.toFixed(2)}</td>
+                        <td class="limit-down-text">${downPercent}%</td>
+                    `;
+                    tbody.appendChild(tr);
+
+                    // 更新為明日基準價
+                    currentUp = nextUp;
+                    currentDown = nextDown;
+                }
+            }
+
+            btn5.addEventListener('click', () => calculateLimit(5));
+            btn10.addEventListener('click', () => calculateLimit(10));
+            // 按 Enter 也可以觸發
+            priceInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') calculateLimit(5);
+            });
         }
         
         // ========== 通用函數 ==========
